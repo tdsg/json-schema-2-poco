@@ -10,6 +10,13 @@ namespace Cvent.JsonSchema2Poco.Class.Property.Types
     /// </summary>
     public class EnumPropertyType : JsonSchemaPropertyType
     {
+        public override CodeNamespaceImportCollection GetImports(JsonPropertyInfo info)
+        {
+            var imports = base.GetImports(info);
+            imports.Add(new CodeNamespaceImport("System.Runtime.Serialization"));
+            return imports;
+        }
+
         /// <summary>
         /// The enumeration definition is considered an embedded type to help with scoping of enumerations between classes
         /// that share the same name.
@@ -27,8 +34,13 @@ namespace Cvent.JsonSchema2Poco.Class.Property.Types
                 enumeration.Comments.Add(new CodeCommentStatement(info.Definition.Description, docComment: true));
             }
 
-            info.Definition.Enum.ToList()
-                .ForEach(x => enumeration.Members.Add(new CodeMemberField(info.Name, x.ToString())));
+            info.Definition.Enum.ToList().ForEach(x =>
+            {
+                var enumEntry = new CodeMemberField(info.Name, ConvertToPascalCase(x.ToString()));
+                enumEntry.CustomAttributes.Add(new CodeAttributeDeclaration("EnumMember",
+                    new CodeAttributeArgument {Name = "Value", Value = new CodePrimitiveExpression(x.ToString())}));
+                enumeration.Members.Add(enumEntry);
+            });
 
             var embeddedTypes = new CodeTypeDeclarationCollection();
             embeddedTypes.Add(enumeration);
