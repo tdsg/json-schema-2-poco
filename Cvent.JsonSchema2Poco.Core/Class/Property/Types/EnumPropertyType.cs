@@ -27,7 +27,7 @@ namespace Cvent.JsonSchema2Poco.Class.Property.Types
             if (info.Definition.Id != null)
                 return base.GetEmbeddedTypes(info);
 
-            var enumeration = new CodeTypeDeclaration(info.Name + "Enum");
+            var enumeration = new CodeTypeDeclaration(GetTypeName(info));
             enumeration.IsEnum = true;
             if (!string.IsNullOrEmpty(info.Definition.Description))
             {
@@ -52,10 +52,9 @@ namespace Cvent.JsonSchema2Poco.Class.Property.Types
         {
             var required = info.Definition.Required.HasValue && info.Definition.Required.Value;
             var defaultPresent = GetDefaultAssignment(info) != null;
-            var name = info.Definition.Title != null ? ConvertToPascalCase(info.Definition.Title) : info.Name;
             return required || defaultPresent
-                ? new CodeTypeReference(name + "Enum")
-                : new CodeTypeReference(name + "Enum?");
+                ? new CodeTypeReference(GetTypeName(info))
+                : new CodeTypeReference(GetTypeName(info) + "?");
         }
 
         /// <see cref="JsonSchemaPropertyType"/>
@@ -69,7 +68,7 @@ namespace Cvent.JsonSchema2Poco.Class.Property.Types
             return CreateReferenceDefaultAssignment(info.FieldName, value);
         }
 
-        private string ConvertToPascalCase(string s)
+        private static string ConvertToPascalCase(string s)
         {
             if (string.IsNullOrEmpty(s))
             {
@@ -96,7 +95,7 @@ namespace Cvent.JsonSchema2Poco.Class.Property.Types
             return ret;
         }
 
-        public string Capitalize(string s)
+        public static string Capitalize(string s)
         {
             if (string.IsNullOrEmpty(s))
             {
@@ -106,6 +105,11 @@ namespace Cvent.JsonSchema2Poco.Class.Property.Types
             char[] arr = s.ToCharArray();
             arr[0] = Char.ToUpper(arr[0]);
             return new string(arr);
+        }
+
+        private static string GetTypeName(JsonPropertyInfo info)
+        {
+            return (info.Definition.Title != null ? ConvertToPascalCase(info.Definition.Title) : info.Name) + "Enum";
         }
     }
 }
